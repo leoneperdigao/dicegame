@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import random
+
 from dice_game import DiceGame
 import numpy as np
 
@@ -10,6 +12,11 @@ class DiceGameAgent(ABC):
     @abstractmethod
     def play(self, state):
         pass
+
+    def get_next_states_cached(self, cache, action, state):
+        if (action, state) not in cache:
+            cache[(action, state)] = self.game.get_next_states(action, state)
+        return cache[(action, state)]
 
 
 class AlwaysHoldAgent(DiceGameAgent):
@@ -23,6 +30,34 @@ class PerfectionistAgent(DiceGameAgent):
             return 0, 1, 2
         else:
             return ()
+
+
+class MyAgent(DiceGameAgent):
+    def __init__(self, game, gamma=0.99, theta=0.0001):
+        """Initializes the agent by performing a value iteration
+        After the value iteration is run an optimal policy is returned. This
+        policy instructs agent on what action to take in any possible state.
+        """
+        # this calls the superclass constructor (does self.game = game)
+        super().__init__(game)
+        self.__gamma = gamma
+        self.__theta = theta
+        self.__policy = {}
+        self.__v_arr = {}
+        self.__local_cache = {}
+
+        self.__init_policy()
+
+    def __init_policy(self):
+        """Initialize the policy by setting all actions to a random action"""
+        for state in self.game.states:
+            self.__v_arr[state] = 0
+            self.__policy[state] = random.choice(self.game.actions)
+
+
+
+    def play(self, state):
+        return self.__policy[state]
 
 
 def play_game_with_agent(agent, game, verbose=False):
