@@ -33,7 +33,7 @@ class PerfectionistAgent(DiceGameAgent):
 
 
 class MyAgent(DiceGameAgent):
-    def __init__(self, game, gamma=0.99, theta=0.001):
+    def __init__(self, game, gamma=0.95, theta=0.001):
         """Initializes the agent by performing a value iteration
         After the value iteration is run an optimal policy is returned. This
         policy instructs agent on what action to take in any possible state.

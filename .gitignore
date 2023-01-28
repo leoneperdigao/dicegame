@@ -8,7 +8,7 @@
 __pycache__/
 
 # Virtual environment
-venv/
+.venv/
 
 # PyCharm's local history of your files
 *.iml
