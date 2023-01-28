@@ -33,7 +33,7 @@ class PerfectionistAgent(DiceGameAgent):
 
 
 class MyAgent(DiceGameAgent):
-    def __init__(self, game, gamma=0.99, theta=0.0001):
+    def __init__(self, game, gamma=0.99, theta=0.001):
         """Initializes the agent by performing a value iteration
         After the value iteration is run an optimal policy is returned. This
         policy instructs agent on what action to take in any possible state.
@@ -47,6 +47,7 @@ class MyAgent(DiceGameAgent):
         self.__local_cache = {}
 
         self.__init_policy()
+        self.__policy, self.__v_arr = self.__policy_iteration()
 
     def __init_policy(self):
         """Initialize the policy by setting all actions to a random action"""
@@ -54,7 +55,61 @@ class MyAgent(DiceGameAgent):
             self.__v_arr[state] = 0
             self.__policy[state] = random.choice(self.game.actions)
 
+    def __policy_iteration(self):
+        """
+        Perform policy iteration algorithm to find optimal policy
+        """
+        policy = {state: self.game.actions[0] for state in self.game.states}
+        v_arr = {state: 0 for state in self.game.states}
+        while True:
+            v_arr = self.__policy_evaluation(policy, v_arr)
+            policy_stable = True
+            for state in self.game.states:
+                old_action = policy[state]
+                policy[state] = self.__policy_improvement(policy, v_arr, state)
+                if old_action != policy[state]:
+                    policy_stable = False
+            if policy_stable:
+                break
+        return policy, v_arr
 
+    def __policy_evaluation(self, policy, v_arr):
+        """
+        Evaluate the current policy
+        """
+        while True:
+            delta_max = 0
+            for state in self.game.states:
+                v = v_arr[state]
+                action = policy[state]
+                states, game_over, reward, probabilities = self.get_next_states_cached(
+                    self.__local_cache, action, state
+                )
+                v_arr[state] = sum(
+                    prob * (reward + self.__gamma * v_arr[s1]) for s1, prob in zip(states, probabilities) if not game_over
+                )
+                delta_max = max(delta_max, abs(v - v_arr[state]))
+            if delta_max < self.__theta:
+                break
+        return v_arr
+
+    def __policy_improvement(self, policy, v_arr, state):
+        """
+        Improve current policy
+        """
+        max_action_val = float('-inf')
+        best_action = policy[state]
+        for action in self.game.actions:
+            states, game_over, reward, probabilities = self.get_next_states_cached(
+                self.__local_cache, action, state
+            )
+            action_val = sum(
+                prob * (reward + self.__gamma * v_arr[s1]) for s1, prob in zip(states, probabilities) if not game_over
+            )
+            if action_val > max_action_val:
+                max_action_val = action_val
+                best_action = action
+        return best_action
 
     def play(self, state):
         return self.__policy[state]
