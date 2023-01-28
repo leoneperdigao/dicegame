@@ -8,15 +8,16 @@ import numpy as np
 class DiceGameAgent(ABC):
     def __init__(self, game):
         self.game = game
+        self.local_cache = {}
 
     @abstractmethod
     def play(self, state):
         pass
 
-    def get_next_states_cached(self, cache, action, state):
-        if (action, state) not in cache:
-            cache[(action, state)] = self.game.get_next_states(action, state)
-        return cache[(action, state)]
+    def get_next_state(self, action, state):
+        if (action, state) not in self.local_cache:
+            self.local_cache[(action, state)] = self.game.get_next_states(action, state)
+        return self.local_cache[(action, state)]
 
 
 class AlwaysHoldAgent(DiceGameAgent):
@@ -33,83 +34,83 @@ class PerfectionistAgent(DiceGameAgent):
 
 
 class MyAgent(DiceGameAgent):
-    def __init__(self, game, gamma=0.95, theta=0.001):
-        """Initializes the agent by performing a value iteration
-        After the value iteration is run an optimal policy is returned. This
-        policy instructs agent on what action to take in any possible state.
+    """An AI agent for playing a dice game.
+    This agent uses the value iteration algorithm to find the optimal policy.
+    """
+    def __init__(self, game, gamma=0.96, theta=0.1):
         """
-        # this calls the superclass constructor (does self.game = game)
+        Parameters:
+            game (DiceGame): The game that the agent will play.
+            gamma (float): The discount factor for future rewards.
+            theta (float): The threshold for the convergence of the value iteration algorithm.
+        """
         super().__init__(game)
         self.__gamma = gamma
         self.__theta = theta
-        self.__policy = {}
-        self.__v_arr = {}
-        self.__local_cache = {}
+        self.__perform_value_iteration()
 
-        self.__init_policy()
-        self.__policy, self.__v_arr = self.__policy_iteration()
-
-    def __init_policy(self):
-        """Initialize the policy by setting all actions to a random action"""
+    def __initialize_state_value_array_and_policy(self):
+        """Initialize the state-value array and policy dictionary for the value iteration algorithm.
+        Returns:
+            (dict, dict): A tuple with a zero-state-value array and an empty policy for each initial state.
+        """
+        state_value_array = {}
+        policy = {}
         for state in self.game.states:
-            self.__v_arr[state] = 0
-            self.__policy[state] = random.choice(self.game.actions)
+            state_value_array[state] = 0
+            policy[state] = ()
+        return state_value_array, policy
 
-    def __policy_iteration(self):
-        """
-        Perform policy iteration algorithm to find optimal policy
-        """
-        policy = {state: self.game.actions[0] for state in self.game.states}
-        v_arr = {state: 0 for state in self.game.states}
-        while True:
-            v_arr = self.__policy_evaluation(policy, v_arr)
-            policy_stable = True
-            for state in self.game.states:
-                old_action = policy[state]
-                policy[state] = self.__policy_improvement(policy, v_arr, state)
-                if old_action != policy[state]:
-                    policy_stable = False
-            if policy_stable:
-                break
-        return policy, v_arr
+    def __calculate_state_value_sum(self, state_value_array, current_state, states, game_over, reward, probabilities):
+        """Calculate the expected state-value for the next state given the current state,
+        action and the transition probabilities.
 
-    def __policy_evaluation(self, policy, v_arr):
+        Args:
+            state_value_array (dict): The state-value array.
+            current_state (tuple): The current state of the game.
+            states (list): The list of next states.
+            game_over (bool): Whether the game is over.
+            reward (float): The reward for the current state and action.
+            probabilities (list): The transition probabilities for the next states.
+
+        Returns:
+            (float): The expected state-value for the next state.
         """
-        Evaluate the current policy
+        state_value_sum = 0
+        for state, probability in zip(states, probabilities):
+            if not game_over:
+                state_value_sum += probability * (reward + self.__gamma * state_value_array[state])
+            else:
+                state_value_sum += probability * (reward + self.__gamma * self.game.final_score(current_state))
+        return state_value_sum
+
+    def __perform_value_iteration(self):
+        """Perform the value iteration algorithm to find the optimal policy for the current game.
+
+        The value iteration algorithm is an iterative method to find the optimal policy for a given MDP (Markov Decision Process).
+        The algorithm starts with initializing the state value array and policy to default values.
+        Then, it iteratively updates the state value array and policy until the maximum change in the state value array is less than a given threshold (theta).
+        The algorithm terminates when the maximum change is less than the threshold.
         """
-        while True:
+        state_value_array, policy = self.__initialize_state_value_array_and_policy()
+        delta_max = self.__theta + 1
+        while delta_max >= self.__theta:
             delta_max = 0
-            for state in self.game.states:
-                v = v_arr[state]
-                action = policy[state]
-                states, game_over, reward, probabilities = self.get_next_states_cached(
-                    self.__local_cache, action, state
-                )
-                v_arr[state] = sum(
-                    prob * (reward + self.__gamma * v_arr[s1]) for s1, prob in zip(states, probabilities) if not game_over
-                )
-                delta_max = max(delta_max, abs(v - v_arr[state]))
-            if delta_max < self.__theta:
-                break
-        return v_arr
+            for current_state in self.game.states:
+                current_state_value = state_value_array[current_state]
+                max_action = 0
+                for action in self.game.actions:
+                    states, game_over, reward, probabilities = self.get_next_state(action, current_state)
+                    state_value_sum = self.__calculate_state_value_sum(
+                        state_value_array, current_state, states, game_over, reward, probabilities
+                    )
+                    if state_value_sum > max_action:
+                        max_action = state_value_sum
+                        policy[current_state] = action
+                    state_value_array[current_state] = max_action
+                delta_max = max(delta_max, abs(current_state_value - state_value_array[current_state]))
 
-    def __policy_improvement(self, policy, v_arr, state):
-        """
-        Improve current policy
-        """
-        max_action_val = float('-inf')
-        best_action = policy[state]
-        for action in self.game.actions:
-            states, game_over, reward, probabilities = self.get_next_states_cached(
-                self.__local_cache, action, state
-            )
-            action_val = sum(
-                prob * (reward + self.__gamma * v_arr[s1]) for s1, prob in zip(states, probabilities) if not game_over
-            )
-            if action_val > max_action_val:
-                max_action_val = action_val
-                best_action = action
-        return best_action
+        self.__policy = policy
 
     def play(self, state):
         return self.__policy[state]

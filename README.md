@@ -15,84 +15,66 @@ The best possible score for this game is 18 and is achieved by rolling three 1s 
 The reroll penalty prevents you from rolling forever to get this score. If the value of the current dice is greater 
 than the expected value of rerolling them (accounting for the penalty), then you should stick.
 
-## Installation
+## Methodology
 
-1. Install Poetry by running `pip install poetry` in your command line.
-2. Clone this repository by running `git clone https://github.com/leoneperdigao/dicegame.git` in your command line.
-3. Navigate to the root directory of the cloned repository by running `cd dicegame`.
-4. Use Poetry to install the dependencies by running poetry install. This will create a virtual environment for the project and install all the required packages.
-5. Run the game by executing `poetry run python dice_game.py`.
-6. Enjoy the game!
+The methodology used in this solution is the value iteration algorithm for Markov Decision Processes (MDPs). 
+This algorithm is an iterative method to find the optimal policy for a given MDP. 
+The algorithm starts by initializing the state value array and policy to default values. 
+Then, it iteratively updates the state value array and policy until the maximum change in the state value array is less than a given threshold (theta). 
+The algorithm terminates when the maximum change is less than the threshold.
 
-## Methodoly
+Value iteration is similar to another algorithm called policy iteration, but it has some key differences. 
+Policy iteration starts by initializing the policy to random actions and then evaluates and improves the policy until it converges to the optimal policy. 
+On the other hand, value iteration evaluates the state value function and improves it until it converges to the optimal state value function. 
+Both algorithms are guaranteed to converge to the optimal solution for any MDP, but value iteration generally requires fewer iterations to converge.
 
-Value iteration and policy iteration are two popular algorithms for solving Markov Decision Processes (MDPs). 
-Both algorithms are used to find an optimal policy for an agent to follow in a given MDP.
+The math behind the `perform_value_iteration` method is the Bellman equation. 
+The Bellman equation is a fundamental concept in the field of dynamic programming and is used to calculate the value of a state in a Markov Decision Process (MDP), which is the core of the value iteration algorithm. 
+The equation can be represented as:
 
-Value iteration is an iterative algorithm that starts with an initial value function and repeatedly updates the value 
-function until it converges to the optimal value function. The algorithm consists of the following steps:
+```math
+V(s) = max(R(s,a) + γ * Σ(T(s,a,s') * V(s')))
+```
 
-1. Initialize the value function for all states.
-2. Iterate over all states and update the value function using the Bellman equation.
-3. Check the maximum change in the value function, if it is below a certain threshold (theta), then stop, otherwise go back to step 2.
+Where:
 
-The optimal policy can be found by taking the action that maximizes the expected value of the next state at each step.
+- `V(s)` is the value of the current state `s`.
+- `R(s,a)` is the immediate reward for taking action `a` in state `s`.
+- `γ` is the discount factor for future rewards.
+- `T(s,a,s')` is the transition probability of reaching state `s'` from state s when taking action `a`.
+- `V(s')` is the value of the next state `s'`.
 
-Policy iteration is another algorithm that solves MDPs. The algorithm consists of the following steps:
+This formula is used to calculate the expected state-value for the next state given the current state, action and the transition probabilities. 
+The algorithm then updates the state-value array and the policy based on this expected value.
 
-1. Initialize a random policy for all states.
-2. Evaluate the current policy by computing the value function for all states.
-3. Improve the policy by finding the action that maximizes the expected value of the next state for each state.
-4. Check if the policy has changed, if it has not, then stop, otherwise go back to step 2.
+### Code walk-trough
 
-In this specific case, the algorithm is implemented to find the optimal policy for playing a dice game. 
-The agent starts at a given state and repeatedly takes actions based on the current policy. 
-The agent's goal is to find the policy that maximizes the expected reward over the long run.
+This solution provides an AI agent for playing a dice game, which uses the value iteration algorithm to find the optimal policy for the game. 
+The value iteration algorithm is a method to find the optimal policy for a given Markov Decision Process (MDP). 
+The agent extends the `DiceGameAgent` class, which is likely an abstraction for a game that can be played using dice.
 
-The main difference between the two algorithms is that value iteration directly computes the optimal value function and 
-then extracts the optimal policy, while policy iteration alternates between evaluating the current policy and improving the policy.
+The `__init__` method of the agent takes in the game that the agent will play, as well as two parameters: gamma and theta. 
+The gamma parameter is a discount factor for future rewards, which is used to weigh the importance of future rewards relative to immediate rewards. 
+The theta parameter is a threshold for the convergence of the value iteration algorithm. 
+The `__init__` method calls the `__perform_value_iteration method`, which performs the value iteration algorithm to find the optimal policy for the game.
 
-The time complexity of value iteration is O(n^2) where n is the number of states. The space complexity is O(n) because we only need to store the value function for each state.
+The `__initialize_state_value_array_and_policy` method initializes the state-value array and policy dictionary for the value iteration algorithm. 
+It creates an empty state-value array and an empty policy dictionary, then sets the value of each key in the array to 0 and the value of each key in the dictionary to an empty tuple.
 
-The time complexity of policy iteration is O(n^2 * k) where n is the number of states and k is the number of iterations until convergence. 
-The space complexity is O(n), because we only need to store the policy for each state.
+The `__calculate_state_value_sum` method calculates the expected state-value for the next state, given the current state, action and the transition probabilities. 
+It takes in the current state-value array, the current state, the list of next states, whether the game is over, the reward for the current state and action and the transition probabilities for the next states. 
+It iterates over the list of next states and the corresponding transition probabilities, and calculates the expected state-value for the next state.
 
-In terms of pros and cons, value iteration is more efficient in terms of time complexity, but it may require more iterations to converge. 
-Policy iteration is more efficient in terms of the number of iterations, but it has a higher time complexity.
+The `__perform_value_iteration` method performs the value iteration algorithm to find the optimal policy for the current game. 
+It starts by initializing the state-value array and policy to default values by calling the `__initialize_state_value_array_and_policy` method. 
+Then, it iteratively updates the state-value array and policy until the maximum change in the state-value array is less than the given threshold (theta). 
+The algorithm terminates when the maximum change is less than the threshold.
 
-It is important to note that the choice of algorithm depends on the specific problem and the trade-offs that need to be made. 
-For example, if the problem is large and memory is a concern, value iteration is a better choice because it requires less memory. 
-However, if the problem is small and fast convergence is required, policy iteration is a better choice.
+The `play` method takes in the current state, it returns the action stored in the `__policy` dictionary corresponding to the given state.
 
-### Code overview
-
-The solution is created in the package `agent` that holds a module `dice_game_agent.py` which defines a class called 
-MyAgent which subclasses DiceGameAgent. The class has an init method that takes in the game object and two optional 
-parameters, gamma and theta.
-
-The init method initializes the class with the game object passed in, and sets the class attributes __gamma and
-__theta to the values passed in or defaults if none were passed. Also, it creates a dictionary __policy and __v_arr 
-to store the policies and value of states, and the __local_cache attribute is a dictionary used to cache results of 
-the get_next_states_cached method.
-
-The __init_policy method initializes the __policy dictionary by setting all actions to a random action. 
-The __policy_iteration method performs the Policy Iteration algorithm to find the optimal policy for the agent by 
-calling the __policy_evaluation and __policy_improvement methods.
-
-__policy_evaluation method takes in a policy and v_arr as input and returns v_arr after updating the utility values of 
-the states using the current policy. It does this by iterating through all the states and updating the value of each 
-state using the expected value of the reward obtained from taking the action in the current policy in that state. 
-It continues this process until the maximum change in the value of any state is less than theta.
-
-__policy_improvement method takes in the current policy, v_arr, and a state and returns the best action to take in 
-that state. It does this by iterating through all the possible actions, calculating the expected value of the reward 
-obtained from taking that action and selecting the action that results in the highest expected value.
-
-The play method takes in a state as input and returns the action to take in that state based on the current policy.
-
-The gamma parameter is the discount factor, which controls the importance of future rewards. 
-A high value means future rewards are important, a low value means they are not. Theta is a stopping criterion. 
-It is used to check whether the utility values of the states have converged to the optimal values or not.
+The key part of the code is the `__perform_value_iteration` method, which is where the value iteration algorithm is implemented. 
+The method uses the get_next_state method to get the next states, rewards, probability and game over status for the current action and state. 
+It uses these values to update the state-value array and the policy dictionary.
 
 ## Results
 
@@ -1110,3 +1092,13 @@ Results of 1000 executions with random gamma and theta values:
 ### Graph
 
 ![image info](./analysis/results/graph-1000.png)
+
+
+## Installation
+
+1. Install Poetry by running `pip install poetry` in your command line.
+2. Clone this repository by running `git clone https://github.com/leoneperdigao/dicegame.git` in your command line.
+3. Navigate to the root directory of the cloned repository by running `cd dicegame`.
+4. Use Poetry to install the dependencies by running poetry install. This will create a virtual environment for the project and install all the required packages.
+5. Run the game by executing `poetry run python dice_game.py`.
+6. Enjoy the game!
