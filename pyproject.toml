@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "dicegame"
+version = "0.1.0"
+description = "AI written in Python that can play a simple dice game"
+authors = ["Leone Perdigão <leone.lage@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.24.1"
+scipy = "^1.10.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

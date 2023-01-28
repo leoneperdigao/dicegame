@@ -1,0 +1,14 @@
+# .gitignore for a Python project in PyCharm
+
+# PyCharm files
+.idea/
+
+# Python bytecode files
+*.pyc
+__pycache__/
+
+# Virtual environment
+venv/
+
+# PyCharm's local history of your files
+*.iml
