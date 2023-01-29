@@ -197,7 +197,7 @@ The solution uses value iteration algorithm and applies the Bellman equation to 
 The simulation with significant number of games (15.000) using random `theta` and `gamma` values led the observation of how these parameters affect the algorithm's performance in terms of score and execution time.
 Moreover, the set of graphs provided a broad perspective and insights for best selection of hyperparmeters for the agent.
 
-One potential improvement would be incorporating more advances machine learning techniques such as Q-learning [2] or SARSA [3] for further improve the agent's performance.
+One potential improvement would be incorporating more advanced machine learning techniques such as Q-learning [2] or SARSA [3] for further improve the agent's performance.
 In addition, using sparse arrays and matrices to represent the state-value array and policy dictionary instead of nested dictionaries could lead to significant performance gains, especially for large and complex MDPs.
 
 Therefore, the solution provides a solid foundation for understanding and implementing the value iteration algorithm for solving MDPs, and offers opportunities for further development and optimization.
