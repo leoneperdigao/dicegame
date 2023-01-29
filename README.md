@@ -158,6 +158,7 @@ For tuning each hyperparameter individually, while tuning `gamma`, `theta` was f
 The same approach was used for tuning `theta`.
 
 This analysis was performed for both games, a standard and the non-standard dice game with 2 dice of 3 sides.
+A total of 1000 games were played using each configuration.
 
 #### Theta fine tune, standard game
 
