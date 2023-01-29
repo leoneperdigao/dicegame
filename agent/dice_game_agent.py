@@ -15,6 +15,15 @@ class DiceGameAgent(ABC):
         pass
 
     def get_next_state(self, action, state):
+        """Retrieve the next states, game over status and reward for the given action and state.
+
+        Args:
+        action (str): The action to take in the current state.
+        state (tuple): The current state of the game.
+
+        Returns:
+        tuple: A tuple containing the list of next states, game over status (bool) and reward (float).
+        """
         if (action, state) not in self.local_cache:
             self.local_cache[(action, state)] = self.game.get_next_states(action, state)
         return self.local_cache[(action, state)]
@@ -37,16 +46,16 @@ class MyAgent(DiceGameAgent):
     """An AI agent for playing a dice game.
     This agent uses the value iteration algorithm to find the optimal policy.
     """
-    def __init__(self, game, gamma=0.96, theta=0.1):
+    def __init__(self, game, theta=1.1, gamma=0.975):
         """
         Parameters:
             game (DiceGame): The game that the agent will play.
-            gamma (float): The discount factor for future rewards.
             theta (float): The threshold for the convergence of the value iteration algorithm.
+            gamma (float): The discount factor for future rewards.
         """
         super().__init__(game)
-        self.__gamma = gamma
         self.__theta = theta
+        self.__gamma = gamma
         self.__perform_value_iteration()
 
     def __initialize_state_value_array_and_policy(self):
