@@ -4,8 +4,9 @@ This solution provides an AI agent written in Python for playing a dice game, wh
 
 ### Game rules:
 
-The player starts with 0 points
-Roll three fair six-sided dice
+The player starts with 0 points.
+
+Roll three fair six-sided dice.
 
 Now choose one of the following:
 * Stick, accept the values shown. If two or more dice show the same values, then all of them are flipped upside down: 1 becomes 6, 2 becomes 5, 3 becomes 4, and vice versa. The total is then added to your points and this is your final score.
